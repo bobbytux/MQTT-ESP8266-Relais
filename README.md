@@ -23,10 +23,4 @@ Bibliothéques :
  
 Dans IDE : Faire Croquis / inclure une bibliothéque / ajouter la bibliothèque ZIP. 
 
-
-Adaptation pour reconnaissance dans Domoticz : 
-Dans le fichier PubSubClient.h : La valeur du paramètre doit être augmentée à 512 octets. Cette définition se trouve à la ligne 26 du fichier, sinon cela ne fonctionne pas avec Domoticz
-
-
-
 Vidéo explicative sur YouTube : https://www.youtube.com/watch?v=6HclvzhEWMg
