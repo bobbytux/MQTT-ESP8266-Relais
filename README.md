@@ -3,7 +3,7 @@ Action d'un relais en WIFI au travers de MQTT depuis Domoticz
 
 Tout est possible, la seule limitation sera la consommation de l'appareil commandé ne devra pas dépasser les spécifications inscrites sur le relais commandé.
 
-##Liens utiles
+# Liens utiles
 
 Logiciel  :
 
