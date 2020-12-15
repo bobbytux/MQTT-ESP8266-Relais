@@ -1,13 +1,16 @@
-# MQTT-ESP8266-Relais
+## MQTT-ESP8266-Relais
 Action d'un relais via MQTT depuis Domoticz
 
 But : Commander un relais MQTT via Domoticz.
 
 L'intéret est de pouvoir déclencher un relais à distance par WIFI.
 
-ce dernier permettant d'activer l'alimentation d'un appareil électrique, que ce soit moteur, éclairage,...., tout est possible, dès lors que la consommation de l'appareil commandé ne dépasse pas la Tension (volts), et Intensité (Ampéres) maximum autorisé par le relais, et en fonction du type de courant.
+Tout est possible, la consommation de l'appareil commandé ne doit pas dépasser les spécifications inscrites sur le relais commandé.
 
-Partie logiciel necessaire : 
+#Liens utiles
+
+Logiciel  :
+
 - Driver USB CH340G : https://wiki.wemos.cc/downloads 
 - Logiciel Arduino IDE : https://www.arduino.cc/en/Main/Software 
 - URL à ajouter pour le Bord manager : http://arduino.esp8266.com/stable/package_esp8266com_index.json 
