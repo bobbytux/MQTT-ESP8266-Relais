@@ -1,4 +1,3 @@
-
 /*
  ESP8266 MQTT - Déclenchement d'un relais
  Création Dominique PAUL.
@@ -31,56 +30,71 @@ dans Outils -> Type de carte : generic ESP8266 module
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 
-// Déclaration des constantes, données à adapter à votre réseau.
-// ------------------------------------------------------------
-const char* ssid = "_MON_SSID_";                // SSID du réseau Wifi
-const char* password = "_MOT_DE_PASSE_WIFI_";   // Mot de passe du réseau Wifi.
-const char* mqtt_server = "_IP_DU_BROKER_";     // Adresse IP ou DNS du Broker.
-const int mqtt_port = 1883;                     // Port du Brocker MQTT
-const char* mqtt_login = "_LOGIN_";             // Login de connexion à MQTT.
-const char* mqtt_password = "_PASSWORD_";       // Mot de passe de connexion à MQTT.
-// ------------------------------------------------------------
-// Variables et constantes utilisateur :
 String nomModule = "Module relais";     // Nom usuel de ce module.
-char* topicIn = "domoticz/out";         // Nom du topic envoyé par Domoticz
-char* topicOut = "domoticz/in";         // Nom du topic écouté par Domoticz
-int pinRelais = 0;                      // Pin sur lequel est connecté la commande du relais.
-int idxDevice = 27;                     // Index du Device à actionner.
-// ------------------------------------------------------------
 
+#define RELAY_PIN 0                      // Pin sur lequel est connecté la commande du relais.
+
+// Définitions liées à Domoticz et MQTT
+// ------------------------------------------------------------
+const char* mqtt_server   = "192.168.1.70";       // Adresse IP ou DNS du Broker.
+const int   mqtt_port     = 1883;                 // Port du Brocker MQTT
+const char* mqtt_login    = "mqtt";               // Login de connexion à MQTT.
+const char* mqtt_password = "pass2mqtt";          // Mot de passe de connexion à MQTT.
+char*       topicIn       = "domoticz/out";       // Nom du topic envoyé par Domoticz
+char*       topicOut      = "domoticz/in";        // Nom du topic écouté par Domoticz
+int         idxDevice     = 48;                   // Idx du dispositif dans Domoticz
+
+// -------------------------------------------------------------
+// Définitions liées au WIFI
+// -------------------------------------------------------------
+const char* ssid          = "bobby-wrt";         // SSID du réseau Wifi
+const char* password      = "lascap-maison";     // Mot de passe du réseau Wifi.
+
+// ------------------------------------------------------------
 
 WiFiClient espClient;
 PubSubClient client(espClient);
-unsigned long lastMsg = 0;
-#define MSG_BUFFER_SIZE	(50)
-char msg[MSG_BUFFER_SIZE];
-int value = 0;
-
 
 void setup() {
-  pinMode(pinRelais, OUTPUT);   
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW);
+     
   Serial.begin(115200);
+  
   setup_wifi();
+
+  client.setBufferSize(512);
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
 }
 
 void loop() {
+
+  if (WiFi.status() != WL_CONNECTED) {
+    setup_wifi();
+  }
+  
   if (!client.connected()) {
     reconnect();
+    if (!client.connected()) {
+      // Pause de 5 secondes
+      delay(5000);
+    }    
   }
+  
   client.loop();
-
 }
 
 
 void setup_wifi() {
   // Connexion au réseau Wifi
-  delay(10);
+
   Serial.println();
   Serial.print("Connection au réseau : ");
   Serial.println(ssid);
-
+    
+  // delay(10);
+  
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) {
@@ -88,8 +102,7 @@ void setup_wifi() {
     delay(500);
     Serial.print(".");
   }
-  // Initialise la séquence Random
-  randomSeed(micros());
+
 
   Serial.println("");
   Serial.println("WiFi connecté");
@@ -100,51 +113,62 @@ void setup_wifi() {
 void callback(char* topic, byte* payload, unsigned int length) {
   // Message reçu du Broker.
   String string;
-  // On vérifie qu'il vient bien de Domoticz.
-  int valeur = strcmp(topic, topicIn);
-  if (valeur == 0) {
-    Serial.print("Message arrivé [");
-    Serial.print(topic);
-    Serial.print("] ");
+    
+  if (strcmp(topic, topicOut)) {  // Topic de Domoticz ?
     for (int i = 0; i < length; i++) {
       string+=((char)payload[i]);
     }
-   // Affiche le message entrant - display incoming message
-    Serial.println(string);
-
-    // Parse l'objet JSON nommé "root"
-    StaticJsonBuffer<512> jsonBuffer;
-    JsonObject &root = jsonBuffer.parseObject(string);
-    if (root.success()) {
+    
+    // Parseur Json
+    DynamicJsonDocument root(512);
+    DeserializationError error = deserializeJson(root, string);
+    
+    if (! error) {
       int idx = root["idx"];
       int nvalue = root["nvalue"];
+      // String dev_name = root["name"];
   
       // Activer la sortie du relais si 1a "nvalue" 1 est reçu.
-      if (idx == idxDevice && nvalue == 1) {
-        digitalWrite(pinRelais, LOW); 
-        Serial.print("Device ");
-        Serial.print(idx);
-        Serial.println(" sur ON");
-      } else if (idx == idxDevice && nvalue == 0) {
-        digitalWrite(pinRelais, HIGH); 
-        Serial.print("Device ");
-        Serial.print(idx);
-        Serial.println(" sur OFF");
-      } else if (idx != idxDevice) {
+      if (idx == idxDevice) {
         Serial.print("Reçu information du Device : ");
         Serial.println(idx);
-      }
+        Serial.println(string);
+        if(nvalue == 1) {
+          digitalWrite(RELAY_PIN, LOW); 
+          Serial.print("Device ");
+          Serial.print(idx);
+          Serial.println(" sur ON");
+        } else if (nvalue == 0) {
+          digitalWrite(RELAY_PIN, HIGH); 
+          Serial.print("Device ");
+          Serial.print(idx);
+          Serial.println(" sur OFF");
+        }
+      }/* else {
+        Serial.print("Reçu information du Device : ");
+        Serial.print(idx);
+        Serial.print(" / ");
+        Serial.println(dev_name);
+        Serial.println(string);
+      }*/
     } else {
-      Serial.println("Erreur de lecture du JSON !");
+        Serial.println("Erreur de lecture du JSON !");
     }
-  }
-
+  } /* else {
+    Serial.print("Message arrivé d'un autre topic [");
+    Serial.print(topic);
+    Serial.println("] ");
+  } */
 }
 
 void reconnect() {
   // Boucle jusqu'à la connexion MQTT
-  while (!client.connected()) {
+  if (!client.connected()) {
     Serial.print("Tentative de connexion MQTT...");
+    
+    // Initialise la séquence Random
+    randomSeed(micros());
+    
     // Création d'un ID client aléatoire
     String clientId = "ESP8266Client-";
     clientId += String(random(0xffff), HEX);
@@ -156,16 +180,17 @@ void reconnect() {
       // Connexion effectuée, publication d'un message...
       String message = "Connexion MQTT de "+ nomModule + " réussi sous référence technique : " + clientId + ".";
       // String message = "Connexion MQTT de "+ nomModule + " réussi.";
-      StaticJsonBuffer<256> jsonBuffer;
-      // Parse l'objet root
-      JsonObject &root = jsonBuffer.createObject();
+      
+      DynamicJsonDocument root(256);
+      
       // On renseigne les variables.
       root["command"] = "addlogmessage";
       root["message"] = message;
       
       // On sérialise la variable JSON
       String messageOut;
-      if (root.printTo(messageOut) == 0) {
+      // if (root.printTo(messageOut) == 0) {
+      if (serializeJson(root, messageOut) == 0) {
         Serial.println("Erreur lors de la création du message de connexion pour Domoticz");
       } else  {
         // Convertion du message en Char pour envoi dans les Log Domoticz.
@@ -179,10 +204,9 @@ void reconnect() {
     } else {
       Serial.print("Erreur, rc=");
       Serial.print(client.state());
-      Serial.println(" prochaine tentative dans 5s");
+      // Serial.println(" prochaine tentative dans 5s");
       // Pause de 5 secondes
-      delay(5000);
+      // delay(5000);
     }
   }
 }
-
