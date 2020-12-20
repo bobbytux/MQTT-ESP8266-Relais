@@ -59,7 +59,7 @@ PubSubClient client(espClient);
 
 void setup() {
   pinMode(RELAY_PIN, OUTPUT);
-  digitalWrite(RELAY_PIN, LOW);
+  digitalWrite(RELAY_PIN, HIGH);
      
   Serial.begin(115200);
   
@@ -104,7 +104,6 @@ void setup_wifi() {
     delay(500);
     Serial.print(".");
   }
-
 
   Serial.println("");
   Serial.println("WiFi connecté");
@@ -164,7 +163,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 }
 
 void reconnect() {
-  // Boucle jusqu'à la connexion MQTT
+  // Connexion MQTT
   if (!client.connected()) {
     Serial.print("Tentative de connexion MQTT...");
     
@@ -177,11 +176,11 @@ void reconnect() {
     
     // Tentative de connexion
     if (client.connect(clientId.c_str(), mqtt_login, mqtt_password)) {
-      Serial.println("connecté");
+      Serial.println(" Connecté");
       
       // Connexion effectuée, publication d'un message...
-      String message = "Connexion MQTT de "+ nomModule + " réussi sous référence technique : " + clientId + ".";
-      // String message = "Connexion MQTT de "+ nomModule + " réussi.";
+      
+      String message = "Connexion MQTT : \""+ nomModule + "\", ID : " + clientId + " -OK-.";
       
       DynamicJsonDocument root(256);
       
@@ -191,7 +190,6 @@ void reconnect() {
       
       // On sérialise la variable JSON
       String messageOut;
-      // if (root.printTo(messageOut) == 0) {
       if (serializeJson(root, messageOut) == 0) {
         Serial.println("Erreur lors de la création du message de connexion pour Domoticz");
       } else  {
@@ -206,9 +204,6 @@ void reconnect() {
     } else {
       Serial.print("Erreur, rc=");
       Serial.print(client.state());
-      // Serial.println(" prochaine tentative dans 5s");
-      // Pause de 5 secondes
-      // delay(5000);
     }
   }
 }
