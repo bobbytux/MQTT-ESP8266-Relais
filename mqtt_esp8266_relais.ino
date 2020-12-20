@@ -49,8 +49,8 @@ int         idxDevice     = 42;                // Idx du dispositif dans Domotic
 // -------------------------------------------------------------
 // Définitions liées au WIFI
 // -------------------------------------------------------------
-const char* ssid          = "bobby-wrt";         // SSID du réseau Wifi
-const char* password      = "lascap-maison";     // Mot de passe du réseau Wifi.
+const char* ssid          = "YOUR_WIFI_SSID";       // SSID du réseau Wifi
+const char* password      = "YOUR_WIFI_PASSWD";     // Mot de passe du réseau Wifi.
 
 // ------------------------------------------------------------
 
