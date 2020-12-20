@@ -1,6 +1,6 @@
 /*
  ESP8266 MQTT - Déclenchement d'un relais
- Création Dominique PAUL.
+ Création Dominique PAUL. / Modifié par Pascal Courtonne
  Dépot Github : https://github.com/DomoticDIY/MQTT-ESP8266-Relais
 
  Bibliothéques nécessaires :
@@ -23,6 +23,8 @@ dans Outils -> Type de carte : generic ESP8266 module
   Flash size : 1M (no SPIFFS)
   Port : Le port COM de votre ESP vu par windows dans le gestionnaire de périphériques.
 
+Vidéo : https://www.youtube.com/watch?v=6HclvzhEWMg&ab_channel=DomoticDIY
+
 */
 
 // Inclure les librairies.
@@ -32,17 +34,17 @@ dans Outils -> Type de carte : generic ESP8266 module
 
 String nomModule = "Module relais";     // Nom usuel de ce module.
 
-#define RELAY_PIN 0                      // Pin sur lequel est connecté la commande du relais.
+#define RELAY_PIN 0                     // Pin sur lequel est connectée la commande du relais.
 
 // Définitions liées à Domoticz et MQTT
 // ------------------------------------------------------------
-const char* mqtt_server   = "192.168.1.70";       // Adresse IP ou DNS du Broker.
-const int   mqtt_port     = 1883;                 // Port du Brocker MQTT
-const char* mqtt_login    = "mqtt";               // Login de connexion à MQTT.
-const char* mqtt_password = "pass2mqtt";          // Mot de passe de connexion à MQTT.
-char*       topicIn       = "domoticz/out";       // Nom du topic envoyé par Domoticz
-char*       topicOut      = "domoticz/in";        // Nom du topic écouté par Domoticz
-int         idxDevice     = 48;                   // Idx du dispositif dans Domoticz
+const char* mqtt_server   = "BROKER_IP";       // Adresse IP ou DNS du Broker.
+const int   mqtt_port     = 1883;              // Port du Brocker MQTT
+const char* mqtt_login    = "MQTT_LOGIN";      // Login de connexion à MQTT.
+const char* mqtt_password = "MQTT_PASSWD";     // Mot de passe de connexion à MQTT.
+char*       topicIn       = "domoticz/out";    // Nom du topic envoyé par Domoticz
+char*       topicOut      = "domoticz/in";     // Nom du topic écouté par Domoticz
+int         idxDevice     = 42;                // Idx du dispositif dans Domoticz
 
 // -------------------------------------------------------------
 // Définitions liées au WIFI
