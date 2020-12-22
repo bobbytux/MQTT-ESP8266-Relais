@@ -57,22 +57,24 @@ const char* password      = "YOUR_WIFI_PASSWD";     // Mot de passe du réseau W
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+// SETUP
+// *****
 void setup() {
   pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(RELAY_PIN, HIGH);
      
   Serial.begin(115200);
-  
-  setup_wifi();
 
   client.setBufferSize(512);
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
 }
 
+// BOUCLE DE TRAVAIL
+// *****************
 void loop() {
 
-  if (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED) {
     setup_wifi();
   }
   
@@ -87,22 +89,46 @@ void loop() {
   client.loop();
 }
 
-
+// CONNEXION WIFI
+// **************
 void setup_wifi() {
+  
   // Connexion au réseau Wifi
 
   Serial.println();
-  Serial.print("Connection au réseau : ");
-  Serial.println(ssid);
-    
-  // delay(10);
+  Serial.print("Connexion au point d'accès Wifi '");
+  Serial.print(ssid);
+  Serial.println("'");
+      
+  WiFi.mode(WIFI_STA);
+  // Serial.printf("Wi-Fi mode réglé sur WIFI_STA %s\n", WiFi.mode(WIFI_STA) ? "" : "Echec!");
   
   WiFi.begin(ssid, password);
 
-  while (WiFi.status() != WL_CONNECTED) {
+  int wifi_status = WiFi.status();
+  while ( wifi_status != WL_CONNECTED) {
+    // Serial.printf("Connection status: %d\n", wifi_status);
+    if( wifi_status == WL_NO_SSID_AVAIL) {
+      Serial.println("");
+      Serial.println("*** Point d'accès Wifi inaccessible");
+      return;
+    }
+    if( wifi_status == WL_CONNECT_FAILED) {
+      Serial.println("");
+      Serial.println("*** Echec de la connexion Wifi");
+      return;
+    }
+    /*
+    if( wifi_status == WL_CONNECT_WRONG_PASSWORD) {
+      Serial.println("");
+      Serial.print("Wifi password is incorrect");
+      return;
+    }
+    */
     // Tant que l'on est pas connecté, on boucle.
     delay(500);
     Serial.print(".");
+    wifi_status = WiFi.status();
   }
 
   Serial.println("");
@@ -127,23 +153,25 @@ void callback(char* topic, byte* payload, unsigned int length) {
     if (! error) {
       int idx = root["idx"];
       int nvalue = root["nvalue"];
-      // String dev_name = root["name"];
+      String dev_name = root["name"];
   
-      // Activer la sortie du relais si 1a "nvalue" 1 est reçu.
+      // Activer ou désactiver le relais en fonction de la valeur de nvalue
       if (idx == idxDevice) {
-        Serial.print("Reçu information du Device : ");
-        Serial.println(idx);
-        Serial.println(string);
+        // Serial.print("Reçu information du Device : ");
+        // Serial.println(idx);
+        // Serial.println(string);
         if(nvalue == 1) {
           digitalWrite(RELAY_PIN, LOW); 
-          Serial.print("Device ");
-          Serial.print(idx);
-          Serial.println(" sur ON");
+          Serial.print("'");
+          Serial.print(dev_name);
+          Serial.println("' === ON ===");
+          Serial.println("");
         } else if (nvalue == 0) {
           digitalWrite(RELAY_PIN, HIGH); 
-          Serial.print("Device ");
-          Serial.print(idx);
-          Serial.println(" sur OFF");
+          Serial.print("'");
+          Serial.print(dev_name);
+          Serial.println("' === OFF ===");
+          Serial.println("");
         }
       }/* else {
         Serial.print("Reçu information du Device : ");
@@ -162,16 +190,19 @@ void callback(char* topic, byte* payload, unsigned int length) {
   } */
 }
 
+// CONNEXION MQTT
+// **************
 void reconnect() {
   // Connexion MQTT
   if (!client.connected()) {
-    Serial.print("Tentative de connexion MQTT...");
     
     // Initialise la séquence Random
     randomSeed(micros());
+
+    Serial.print("Connexion au serveur MQTT...");
     
     // Création d'un ID client aléatoire
-    String clientId = "ESP8266Client-";
+    String clientId = "RelayIOT-";
     clientId += String(random(0xffff), HEX);
     
     // Tentative de connexion
@@ -180,9 +211,11 @@ void reconnect() {
       
       // Connexion effectuée, publication d'un message...
       
-      String message = "Connexion MQTT : \""+ nomModule + "\", ID : " + clientId + " -OK-.";
+      String message = "Connexion MQTT : '"+ nomModule + "', ID : " + clientId + " -OK-.";
       
-      DynamicJsonDocument root(256);
+      // DynamicJsonDocument root(256);
+      const int capacity = JSON_OBJECT_SIZE(2);
+      StaticJsonDocument<capacity> root;
       
       // On renseigne les variables.
       root["command"] = "addlogmessage";
@@ -191,7 +224,7 @@ void reconnect() {
       // On sérialise la variable JSON
       String messageOut;
       if (serializeJson(root, messageOut) == 0) {
-        Serial.println("Erreur lors de la création du message de connexion pour Domoticz");
+        Serial.println("*** Erreur lors de la création du message de connexion pour Domoticz");
       } else  {
         // Convertion du message en Char pour envoi dans les Log Domoticz.
         char messageChar[messageOut.length()+1];
@@ -203,7 +236,10 @@ void reconnect() {
       client.subscribe("#");
     } else {
       Serial.print("Erreur, rc=");
-      Serial.print(client.state());
+      Serial.println(client.state());
+      Serial.println(" prochaine tentative dans 5s");
+      // Pause de 5 secondes
+      delay(5000);
     }
   }
 }
