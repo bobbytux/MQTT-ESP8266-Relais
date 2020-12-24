@@ -215,8 +215,9 @@ void reconnect() {
       String message = "Connexion MQTT : '"+ nomModule + "', ID : " + clientId + " -OK-.";
       
       // DynamicJsonDocument root(256);
-      const int capacity = JSON_OBJECT_SIZE(2);
-      StaticJsonDocument<capacity> root;
+      // const int capacity = JSON_OBJECT_SIZE(2);
+      // StaticJsonDocument<capacity> root;
+     StaticJsonDocument<256> root;
       
       // On renseigne les variables.
       root["command"] = "addlogmessage";
