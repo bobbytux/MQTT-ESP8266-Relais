@@ -60,8 +60,9 @@ PubSubClient client(espClient);
 // SETUP
 // *****
 void setup() {
-  pinMode(RELAY_PIN, OUTPUT);
+
   digitalWrite(RELAY_PIN, HIGH);
+  pinMode(RELAY_PIN, OUTPUT);
      
   Serial.begin(115200);
 
