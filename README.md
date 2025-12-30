@@ -15,7 +15,7 @@ Logiciel  :
 
 Installer la prise en charge des cartes ESP8266
 
-Bibliothéques :
+Bibliothèques :
 
  - pubsubclient : https://github.com/knolleary/pubsubclient 
  - ArduinoJson v5.13.3 : https://github.com/bblanchon/ArduinoJson 
